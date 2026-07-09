@@ -1,0 +1,687 @@
+SHOW VARIABLES LIKE 'local_infile';
+CREATE DATABASE ecommerce_project;
+USE ecommerce_project;
+
+CREATE TABLE customers_dataset (
+    customer_id VARCHAR(50),
+    customer_unique_id VARCHAR(50),
+    customer_zip_code_prefix INT,
+    customer_city VARCHAR(100),
+    customer_state CHAR(2)
+);
+LOAD DATA LOCAL INFILE "C:\\Users\\divya\\Downloads\\customers_dataset.csv"
+INTO TABLE customers_dataset
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+CREATE TABLE geolocation_dataset (
+    geolocation_zip_code_prefix INT,
+    geolocation_lat DECIMAL(10,8),
+    geolocation_lng DECIMAL(11,8),
+    geolocation_city VARCHAR(100),
+    geolocation_state CHAR(2)
+);
+
+LOAD DATA LOCAL INFILE "C:\\Users\\divya\\Downloads\\geolocation.csv"
+INTO TABLE geolocation_dataset
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+CREATE TABLE order_items_dataset (
+    order_id VARCHAR(50),
+    order_item_id INT,
+    product_id VARCHAR(50),
+    seller_id VARCHAR(50),
+    shipping_limit_date DATETIME,
+    price DECIMAL(10,2),
+    freight_value DECIMAL(10,2)
+);
+
+LOAD DATA LOCAL INFILE "C:\\Users\\divya\\Downloads\\order_items.csv"
+INTO TABLE  order_items_dataset
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+CREATE TABLE orders_dataset (
+    order_id VARCHAR(50),
+    customer_id VARCHAR(50),
+    order_status VARCHAR(30),
+    order_purchase_timestamp DATETIME,
+    order_approved_at DATETIME,
+    order_delivered_carrier_date DATETIME,
+    order_delivered_customer_date DATETIME,
+    order_estimated_delivery_date DATETIME
+);
+
+LOAD DATA LOCAL INFILE "C:\\Users\\divya\\Downloads\\orders_dataset.csv"
+INTO TABLE orders_dataset
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+CREATE TABLE order_payments_dataset (
+    order_id VARCHAR(50),
+    payment_sequential INT,
+    payment_type VARCHAR(30),
+    payment_installments INT,
+    payment_value DECIMAL(10,2)
+);
+
+LOAD DATA LOCAL INFILE "C:\\Users\\divya\\Downloads\\order_payments.csv"
+INTO TABLE order_payments_dataset
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+CREATE TABLE order_reviews_dataset (
+    review_id VARCHAR(50),
+    order_id VARCHAR(50),
+    review_score INT,
+    review_comment_title TEXT,
+    review_comment_message TEXT,
+    review_creation_date DATETIME,
+    review_answer_timestamp DATETIME
+);
+
+LOAD DATA LOCAL INFILE "C:\\Users\\divya\\Downloads\\order_reviews.csv"
+INTO TABLE  order_reviews_dataset
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+CREATE TABLE products_dataset (
+    product_id VARCHAR(50),
+    product_category_name VARCHAR(100),
+    product_name_lenght INT,
+    product_description_lenght INT,
+    product_photos_qty INT,
+    product_weight_g INT,
+    product_length_cm INT,
+    product_height_cm INT,
+    product_width_cm INT
+);
+LOAD DATA LOCAL INFILE "C:\\Users\\divya\\Downloads\\products_dataset.csv"
+INTO TABLE products_dataset
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+
+CREATE TABLE sellers_dataset (
+    seller_id VARCHAR(50),
+    seller_zip_code_prefix INT,
+    seller_city VARCHAR(100),
+    seller_state CHAR(2)
+);
+LOAD DATA LOCAL INFILE "C:\\Users\\divya\\Downloads\\sellers.csv"
+INTO TABLE sellers_dataset
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+CREATE TABLE product_category_name_translation (
+    product_category_name VARCHAR(100),
+    product_category_name_english VARCHAR(100)
+);
+
+LOAD DATA LOCAL INFILE "C:\\Users\\divya\\Downloads\\product_category.csv"
+INTO TABLE product_category_name_translation
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS;
+
+SELECT COUNT(*) FROM customers_dataset;
+
+SELECT COUNT(*) FROM geolocation_dataset;
+
+SELECT COUNT(*) FROM order_payments_dataset;
+
+ SELECT COUNT(*) FROM product_category_name_translation;
+ 
+SELECT COUNT(*) FROM sellers_dataset;
+
+SELECT COUNT(*) FROM orders_dataset;
+
+SELECT COUNT(*) FROM order_items_dataset;
+
+SELECT COUNT(*) FROM products_dataset;
+
+SELECT COUNT(*) FROM order_reviews_dataset;
+
+SHOW TABLES;
+
+DESCRIBE customers_dataset;
+
+DESCRIBE sellers_dataset;
+
+DESCRIBE order_items_dataset;
+
+DESCRIBE order_reviews_dataset;
+
+SELECT COUNT(distinct( customer_state))
+FROM customers_dataset;
+
+DESC customers_dataset;
+DESC orders_dataset;
+DESC order_items_dataset;
+DESC order_payments_dataset;
+DESC order_reviews_dataset;
+DESC products_dataset;
+DESC sellers_dataset;
+DESC geolocation_dataset;
+DESC product_category_name_dataset;
+
+/*Module 1 */
+
+/*Q1.How many total customers, orders, products, and sellers are there?*/
+SELECT
+(
+    SELECT COUNT(DISTINCT customer_id)
+    FROM customers_dataset
+) AS Total_Customers,
+
+(
+    SELECT COUNT(DISTINCT order_id)
+    FROM order_items_dataset
+) AS Total_Orders,
+
+(
+    SELECT COUNT(DISTINCT product_id)
+    FROM order_items_dataset
+) AS Total_Products,
+
+(
+    SELECT COUNT(DISTINCT seller_id)
+    FROM order_items_dataset
+) AS Total_Sellers;
+   
+/* Q2.How many orders are in each order status?*/
+SELECT order_status,
+COUNT(order_id) AS total_order
+FROM orders_dataset 
+GROUP BY order_status
+ORDER BY total_order DESC;
+
+/* Q3.How many orders were placed each month?*/
+SELECT 
+     YEAR(order_purchase_timestamp) AS Year_Order_Trend,
+     month(order_purchase_timestamp) AS Monthly_Order_Trend,
+     COUNT(order_id)
+FROM orders_dataset 
+GROUP BY 
+	YEAR(order_purchase_timestamp) ,
+    MONTH(order_purchase_timestamp)
+ORDER BY   
+    YEAR(order_purchase_timestamp),
+    MONTH(order_purchase_timestamp) ;
+
+/*Q4.Which states have the highest number of customers? */
+SELECT customers_dataset.customer_state,
+COUNT(customers_dataset.customer_state) AS total_customers
+FROM customers_dataset
+GROUP BY customers_dataset.customer_state
+ORDER BY COUNT(customers_dataset.customer_state)  DESC;
+
+/*Q5 Which top 10 cities have the highest number of customers?*/
+SELECT customer_city,
+       COUNT(*) AS total_customers
+FROM customers_dataset
+GROUP BY customer_city
+ORDER BY total_customers  DESC
+LIMIT 10;
+
+
+
+/*MODULE 2 – Sales & Revenue Analysis*/
+/*Q7. What is the total revenue generated by the business?*/
+
+SELECT SUM(payment_value) AS total_revenue 
+FROM order_payments_dataset;
+
+/*Q8.How much revenue was generated from delivered orders only?*/
+SELECT order_status,
+       SUM(payment_value) AS total_revenue
+FROM orders_dataset
+INNER JOIN order_payments_dataset
+ON orders_dataset.order_id=order_payments_dataset.order_id 
+WHERE order_status = 'delivered'
+GROUP BY  order_status;
+
+/*Q9. How much revenue was generated each month?*/
+
+SELECT  YEAR(order_purchase_timestamp) AS order_year,
+      Month(order_purchase_timestamp) AS order_month,
+      SUM(payment_value) AS payment
+FROM orders_dataset
+INNER JOIN order_payments_dataset
+ON orders_dataset.order_id=order_payments_dataset.order_id 
+GROUP BY 
+    YEAR(order_purchase_timestamp),
+    MONTH(order_purchase_timestamp)
+ORDER BY  order_year,
+          order_month;
+
+/*Q10. What is the average amount spent per order? */
+SELECT 
+    AVG(order_total) AS average_order_value
+FROM
+(
+    SELECT
+        order_id,
+        SUM(payment_value) AS order_total
+    FROM order_payments_dataset
+    GROUP BY order_id
+) AS order_values;
+
+/*Q11.1 – Cancelled Orders Count */
+SELECT 
+    COUNT(order_status) AS detail
+FROM orders_dataset
+WHERE order_status = 'Canceled';
+
+/*Q11.2 – Cancelled Orders Percentage */
+SELECT 
+    ROUND(
+        (COUNT(*) * 100.0) / (SELECT COUNT(*) FROM orders_dataset),
+        2
+    ) AS cancelled_percentage
+FROM orders_dataset
+WHERE order_status = 'canceled';  
+
+/*Q11.3 – Cancelled Orders Payment*/    
+SELECT 
+      SUM(payment_value) AS total_payment
+FROM order_payments_dataset
+JOIN orders_dataset
+ON order_payments_dataset.order_id=orders_dataset.order_id
+WHERE order_status = 'canceled';
+
+/*MODULE 3 - PRODUCT ANALYSIS */
+
+/* Q13 – Top 10 Best Selling Products */
+
+SELECT 
+      oi.product_id,
+      p.product_category_name, 
+      COUNT(*) AS total_sold 
+FROM order_items_dataset AS oi 
+INNER JOIN products_dataset AS p 
+ON oi.product_id=p.product_id
+ GROUP BY oi.product_id,    
+          p.product_category_name
+ ORDER BY total_sold 
+ DESC LIMIT 10;
+ 
+ 
+/* Q14 – Top 10 Best Selling Categories */
+SELECT 
+      product_category_name,
+	  COUNT(*) AS total_sold 
+FROM order_items_dataset
+INNER JOIN products_dataset
+ON order_items_dataset.product_id = products_dataset.product_id
+ GROUP BY product_category_name
+ORDER BY total_sold DESC
+LIMIT 10;
+ 
+/* Q15 – Highest Revenue Generating Categories */
+SELECT 
+       product_category_name,
+       SUM(price) AS Total_revenue
+FROM order_items_dataset
+INNER JOIN products_dataset
+ON order_items_dataset.product_id = products_dataset.product_id
+GROUP BY product_category_name
+ORDER BY Total_revenue DESC
+LIMIT 10;
+
+/* Q16 – Products Never Sold */
+SELECT   
+      products_dataset.product_id,
+      products_dataset.product_category_name
+FROM products_dataset 
+LEFT JOIN order_items_dataset
+ON products_dataset.product_id = order_items_dataset.product_id
+WHERE order_items_dataset.product_id IS NULL;
+
+
+/* Q17 – Average Product Price by Category */
+SELECT 
+       p.product_category_name,
+       ROUND( AVG(o.price) ,2)AS average_price
+FROM products_dataset p
+INNER JOIN order_items_dataset o
+ON p.product_id = o.product_id
+GROUP BY p.product_category_name
+ORDER BY average_price DESC;
+
+/* Q18 – Top 5 Best Selling Products in Each Category */
+WITH product_sales AS (
+    SELECT 
+           p.product_category_name,
+           o.product_id,
+           COUNT(o.order_id) AS total_sales
+    FROM products_dataset p
+    INNER JOIN order_items_dataset o
+    ON p.product_id = o.product_id
+    GROUP BY 
+           p.product_category_name,
+           o.product_id
+),
+ranked_products AS (
+    SELECT 
+           product_category_name,
+           product_id,
+           total_sales,
+           ROW_NUMBER() OVER(
+               PARTITION BY product_category_name
+               ORDER BY total_sales DESC
+           ) AS rank_no
+    FROM product_sales
+)
+SELECT 
+       product_category_name,
+       product_id,
+       total_sales
+FROM ranked_products
+WHERE rank_no <= 5;
+
+/* MODULE 4 - CUSTOMER ANALYSIS */
+
+/* Q19 – Top 10 Customers by Revenue */
+SELECT  
+      o.customer_id,
+     SUM(p.payment_value) AS total_revenue 
+FROM orders_dataset o
+INNER JOIN order_payments_dataset p
+ON o.order_id=p.order_id
+GROUP BY o.customer_id
+ORDER BY total_revenue DESC
+LIMIT 10;
+
+/* Q20.Customers with More Than One Order*/
+SELECT  
+        c.customer_unique_id,
+       COUNT(o.order_id) AS total_order
+FROM customers_dataset c
+INNER JOIN orders_dataset o
+ON c.customer_id = o.customer_id
+GROUP BY c.customer_unique_id
+HAVING COUNT(o.order_id) > 1
+ORDER BY  total_order;
+
+/* Q21 – One-Time vs Repeat Customers */
+SELECT
+    customer_type,
+    COUNT(*) AS total_customers
+FROM
+(
+SELECT 
+         c.customer_unique_id,
+         COUNT(o.order_id) AS total_order,
+    CASE
+        WHEN COUNT(o.order_id)  = 1 THEN 'One-Time Buyer'
+        ELSE 'Repeat Buyer'
+    END AS customer_type
+FROM customers_dataset c
+INNER JOIN orders_dataset o
+ON c.customer_id = o.customer_id
+GROUP BY c.customer_unique_id
+) AS customer_orders
+GROUP BY customer_type;
+
+/* Q22 – Average Revenue per Customer */
+SELECT AVG(total_revenue) AS avg_revenue_per_customer
+FROM (
+    SELECT 
+            o.customer_id,
+           SUM(p.payment_value) AS  total_revenue
+    FROM orders_dataset o
+    INNER JOIN order_payments_dataset p
+    ON  o.order_id = p.order_id 
+GROUP BY o.customer_id
+    ) AS customer_revenue;
+
+/* Q23 – Customer Segmentation */
+SELECT
+     o.customer_id,
+	SUM(p.payment_value) AS total_spending,
+    CASE
+    WHEN SUM(p.payment_value) >= 200 THEN 'High_Value'
+    WHEN SUM(p.payment_value) >= 100 THEN 'Medium_Value'
+    ELSE 'Low_Value'
+END AS customer_segment
+FROM orders_dataset o
+INNER JOIN order_payments_dataset p
+ON  o.order_id = p.order_id 
+GROUP BY o.customer_id;
+
+/* MODULE 5 - SELLER ANALYSIS */
+
+/* Q24 – Top 10 Sellers by Revenue */
+SELECT s.seller_id,
+      SUM(oi.price) AS Revenue
+FROM sellers_dataset  s
+INNER JOIN order_items_dataset oi
+ON s.seller_id=oi.seller_id
+GROUP BY  s.seller_id
+ORDER BY Revenue DESC
+LIMIT 10;
+
+/* Q25 – Top 10 Sellers by Orders */
+SELECT 
+       seller_id,
+       COUNT(order_id) AS Total_order
+FROM order_items_dataset
+GROUP BY  seller_id
+ORDER BY  Total_order DESC
+LIMIT 10 ;
+
+/* Q26 – Average Revenue per Seller */
+SELECT  
+       AVG(revenue) AS rev
+FROM (
+SELECT
+      seller_id,
+      SUM(price) AS revenue 
+FROM order_items_dataset
+GROUP BY  seller_id
+) AS AVG_REV;
+
+/* Q27 – Seller Performance Classification */
+SELECT
+     seller_id,
+	SUM(price) AS total_revenue,
+    CASE
+    WHEN SUM(price) >= 200 THEN 'High Performer'
+    WHEN SUM(price) >= 100 THEN 'Medium Performer'
+    ELSE 'Low Performer'
+END AS seller_performance
+FROM order_items_dataset
+GROUP BY  seller_id
+ORDER BY total_revenue DESC;
+
+
+/*MODULE 6 : DELIVERY ANALYSIS*/
+/* Q28.Which states have the highest number of delivered orders? */
+
+SELECT 
+      c.customer_state,
+       COUNT(o.order_id) AS total_delivered_orders
+FROM orders_dataset o
+INNER join customers_dataset c
+ON o.customer_id=c.customer_id
+WHERE o.order_status='delivered'
+GROUP BY c.customer_state
+ORDER BY total_delivered_orders DESC;
+
+/* Q29 Which top 10 cities have the highest number of delivered orders? */
+SELECT 
+       c.customer_city,
+        COUNT(o.order_id) AS total_delivered_orders
+FROM orders_dataset o
+INNER join customers_dataset c
+ON o.customer_id=c.customer_id
+WHERE o.order_status='delivered'
+GROUP BY c.customer_city
+ORDER BY total_delivered_orders DESC,
+         c.customer_city ASC
+LIMIT 10;
+
+/* Q30 What is the average number of days taken to deliver an order?*/
+SELECT 
+     AVG(
+     DATEDIFF(order_delivered_customer_date,
+     order_purchase_timestamp
+      )
+        ) AS average_delivery_days
+FROM orders_dataset;
+
+
+/* Q31 Which orders were delivered after the estimated delivery date? */
+SELECT
+    order_id,
+    order_delivered_customer_date,
+    order_estimated_delivery_date,
+    
+    DATEDIFF(
+        order_delivered_customer_date,
+        order_estimated_delivery_date
+    ) AS delay_days,
+
+    CASE
+        WHEN order_delivered_customer_date > order_estimated_delivery_date
+        THEN 'Late'
+        ELSE 'On Time'
+    END AS delivery_status
+
+FROM orders_dataset
+WHERE order_delivered_customer_date > order_estimated_delivery_date;
+
+
+
+/* Q32 - What percentage of delivered orders were delivered on or before the estimated delivery date? */
+SELECT
+ROUND(
+(
+COUNT(
+CASE
+WHEN order_delivered_customer_date <= order_estimated_delivery_date
+THEN 1
+END
+) * 100.0
+)
+/ COUNT(*), 2
+) AS on_time_delivery_percentage
+FROM orders_dataset
+WHERE order_status = 'delivered';
+
+
+/* Q33 Which product categories generated revenue above the average category revenue?
+*/
+SELECT SUM(oi.price) AS revenue,
+      p.product_category_name
+FROM products_dataset p
+INNER JOIN order_items_dataset oi
+ON p.product_id = oi.product_id
+GROUP BY p.product_category_name
+HAVING SUM(oi.price) > 
+(
+  SELECT  
+     AVG(revenue) 
+   FROM
+   (
+       SELECT 
+         SUM(oi.price) AS revenue
+      FROM order_items_dataset oi
+      INNER JOIN products_dataset p
+      ON p.product_id = oi.product_id
+      GROUP BY  p.product_category_name
+   )AS avg_revenue
+);
+
+/* Q34.How did monthly revenue change compared to the previous month? */
+WITH monthly_revenue AS(
+SELECT 
+	 DATE_FORMAT(order_purchase_timestamp,'%Y-%m') AS month,
+    SUM(oi.price) AS revenue
+FROM order_items_dataset oi
+INNER JOIN orders_dataset o
+ON oi.order_id=o.order_id
+GROUP BY  month
+)
+SELECT month ,revenue, 
+      SUM(revenue) OVER (ORDER BY month
+) AS runing_revenue
+FROM monthly_revenue ;
+
+/* Q35. How did monthly revenue change compared to the previous month? */
+
+WITH monthly_revenue AS(
+SELECT 
+	 DATE_FORMAT(order_purchase_timestamp,'%Y-%m') AS month,
+    SUM(oi.price) AS revenue
+FROM order_items_dataset oi
+INNER JOIN orders_dataset o
+ON oi.order_id=o.order_id
+WHERE order_status='delivered'
+GROUP BY  month
+)
+SELECT month ,revenue, 
+      LAG(revenue) OVER (ORDER BY month) AS Priveous_month,
+      revenue - LAG(revenue) OVER (ORDER BY month) AS revenue_groeth
+FROM monthly_revenue ;    
+
+/*36. Rank sellers based on their total revenue using ROW_NUMBER(), RANK(), and DENSE_RANK().*/
+WITH seller_revenue AS(
+SELECT 
+     oi.seller_id,
+    SUM(oi.price) AS revenue
+FROM order_items_dataset oi
+GROUP BY seller_id
+) 
+SELECT seller_id, revenue,
+    ROW_NUMBER () OVER( ORDER BY  revenue DESC) AS seller_rank,
+    RANK() OVER( ORDER BY  revenue DESC) AS  rank_value,
+    DENSE_RANK() OVER( ORDER BY  revenue DESC) AS dense_ran
+FROM   seller_revenue; 
+
+
+/* Q37.Which were the top 3 highest-revenue product categories in each month? */
+WITH monthly_revenue AS(
+SELECT 
+	 DATE_FORMAT(order_purchase_timestamp,'%Y-%m') AS month,
+    SUM(oi.price) AS revenue,
+    p.product_category_name
+FROM order_items_dataset oi
+INNER JOIN orders_dataset o
+ON oi.order_id=o.order_id
+INNER JOIN products_dataset p
+ON oi.product_id = p.product_id
+GROUP BY  month,  p.product_category_name
+),
+ranked_categories AS (
+    SELECT  revenue,product_category_name,month,
+        RANK() OVER(partition by month ORDER BY  revenue DESC) AS rank_no
+    FROM   monthly_revenue
+)
+SELECT
+       product_category_name,revenue,month
+FROM ranked_categories 
+WHERE rank_no <=3
+ORDER BY month,rank_no;
+
+
+ 
